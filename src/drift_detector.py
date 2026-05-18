@@ -132,8 +132,7 @@ class DriftDetector:
             )
         else:
             logger.info(
-                f"No drift in '{feature_name}' "
-                f"(KS={statistic:.4f}, p={p_value:.6f})"
+                f"No drift in '{feature_name}' (KS={statistic:.4f}, p={p_value:.6f})"
             )
 
         return FeatureDriftResult(
@@ -168,12 +167,8 @@ class DriftDetector:
         """
         if features is None:
             # Auto-detect: use numeric columns common to both DataFrames
-            baseline_num = set(
-                baseline_df.select_dtypes(include="number").columns
-            )
-            current_num = set(
-                current_df.select_dtypes(include="number").columns
-            )
+            baseline_num = set(baseline_df.select_dtypes(include="number").columns)
+            current_num = set(current_df.select_dtypes(include="number").columns)
             features = sorted(baseline_num & current_num)
             logger.info(f"Auto-detected {len(features)} numeric features to monitor.")
 

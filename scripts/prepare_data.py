@@ -29,7 +29,7 @@ RAW_PATH = os.path.join(RAW_DIR, "downloaded_dataset.csv")
 
 print("Loading dataset from Google Drive...")
 if not os.path.exists(RAW_PATH):
-    match = re.search(r'/d/([a-zA-Z0-9_-]+)', DATA_SOURCE)
+    match = re.search(r"/d/([a-zA-Z0-9_-]+)", DATA_SOURCE)
     if match:
         file_id = match.group(1)
         gdown.download(id=file_id, output=RAW_PATH, quiet=False)
@@ -47,36 +47,36 @@ print(f"  Loaded dataset ({len(df_raw)} rows).")
 df = df_raw.copy()
 
 # Drop rows where target is missing
-if 'TARGET' in df.columns:
-    df = df.dropna(subset=['TARGET'])
+if "TARGET" in df.columns:
+    df = df.dropna(subset=["TARGET"])
 
-# For demonstration, we'll keep a subset of highly predictive or common features 
+# For demonstration, we'll keep a subset of highly predictive or common features
 # to keep processing fast and EDA clean, avoiding loading all 120+ columns.
 # We'll keep some demographics and external sources.
 columns_to_keep = [
-    'TARGET',
-    'NAME_CONTRACT_TYPE',
-    'CODE_GENDER',
-    'FLAG_OWN_CAR',
-    'FLAG_OWN_REALTY',
-    'CNT_CHILDREN',
-    'AMT_INCOME_TOTAL',
-    'AMT_CREDIT',
-    'AMT_ANNUITY',
-    'DAYS_BIRTH',
-    'DAYS_EMPLOYED',
-    'EXT_SOURCE_2',
-    'EXT_SOURCE_3'
+    "TARGET",
+    "NAME_CONTRACT_TYPE",
+    "CODE_GENDER",
+    "FLAG_OWN_CAR",
+    "FLAG_OWN_REALTY",
+    "CNT_CHILDREN",
+    "AMT_INCOME_TOTAL",
+    "AMT_CREDIT",
+    "AMT_ANNUITY",
+    "DAYS_BIRTH",
+    "DAYS_EMPLOYED",
+    "EXT_SOURCE_2",
+    "EXT_SOURCE_3",
 ]
 
 # Only keep columns that actually exist in the downloaded dataset
 existing_cols = [col for col in columns_to_keep if col in df.columns]
 df = df[existing_cols]
 
-# We will let the pipeline handle the heavy imputation, but for the sake of 
+# We will let the pipeline handle the heavy imputation, but for the sake of
 # drift simulation, we'll drop extreme nulls in the key drift columns to be safe.
-if 'AMT_INCOME_TOTAL' in df.columns and 'AMT_CREDIT' in df.columns:
-    df = df.dropna(subset=['AMT_INCOME_TOTAL', 'AMT_CREDIT'])
+if "AMT_INCOME_TOTAL" in df.columns and "AMT_CREDIT" in df.columns:
+    df = df.dropna(subset=["AMT_INCOME_TOTAL", "AMT_CREDIT"])
 
 print("\nData subset shape:", df.shape)
 
@@ -99,9 +99,9 @@ historical_df, current_df = train_test_split(
 #    • AMT_INCOME_TOTAL shifted up by ~5 %
 #    • AMT_CREDIT shifted up by ~3 %
 # ---------------------------------------------------------------------------
-DRIFT_ROW_FRACTION = 0.50    # fraction of current_data rows that receive the shift
-INCOME_DRIFT_FACTOR = 1.05   # +5 % – simulates economic inflation
-CREDIT_DRIFT_FACTOR = 1.03   # +3 % – simulates increased credit limits over time
+DRIFT_ROW_FRACTION = 0.50  # fraction of current_data rows that receive the shift
+INCOME_DRIFT_FACTOR = 1.05  # +5 % – simulates economic inflation
+CREDIT_DRIFT_FACTOR = 1.03  # +3 % – simulates increased credit limits over time
 
 rng = np.random.default_rng(seed=0)
 

@@ -100,8 +100,7 @@ def simulate_inference(
         end = min(start + batch_size, total_rows)
         batch_df = current_df.iloc[start:end]
 
-        print(f"\n--- Batch {batch_idx + 1}/{num_batches} "
-              f"(rows {start}-{end - 1}) ---")
+        print(f"\n--- Batch {batch_idx + 1}/{num_batches} (rows {start}-{end - 1}) ---")
 
         report = detector.run(historical_df, batch_df, features=features)
 
