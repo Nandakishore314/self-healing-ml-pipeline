@@ -6,3 +6,5 @@ gdown
 scipy
 pytest
 ruff
+fastapi
+uvicorn

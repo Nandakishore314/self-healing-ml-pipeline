@@ -1,0 +1,22 @@
+[
+  {
+    "id": "TC001",
+    "title": "get root api health check status",
+    "description": "Verify that GET / returns a healthy status with correct application name, registered services, and model/data artifact availability without requiring authentication."
+  },
+  {
+    "id": "TC002",
+    "title": "get drift status ks test detection",
+    "description": "Test GET /drift/status endpoint to ensure it correctly performs Kolmogorov-Smirnov statistical tests to detect data drift, returns drift_detected flag, alpha value, drifted features list, and metrics array, and handles missing data files and internal errors appropriately."
+  },
+  {
+    "id": "TC003",
+    "title": "post train trigger automated_retraining",
+    "description": "Validate POST /train endpoint triggers the automated model retraining pipeline with specified model_type and data_source, returns status, message, model_path, and model_type on success, and handles errors such as missing data source file and retraining execution errors."
+  },
+  {
+    "id": "TC004",
+    "title": "post predict credit risk scoring",
+    "description": "Ensure POST /predict endpoint accepts applicant features, returns default prediction, default probability, risk assessment, and approval status when a trained model exists, and returns appropriate errors when no model is found or scoring engine fails."
+  }
+]

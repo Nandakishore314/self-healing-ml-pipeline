@@ -1,0 +1,137 @@
+{
+  "product_name": "Self-Healing ML Pipeline",
+  "version": "1.0.0",
+  "description": "An automated, self-healing Machine Learning pipeline for the Home Credit Default Risk dataset. Detects data drift using KS-tests and triggers automated retraining.",
+  "features": [
+    {
+      "name": "Health Check & Service Status",
+      "description": "Returns API health status, model availability, and data artifact presence",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/",
+          "description": "Retrieve API status, registered services, and model/data artifact availability",
+          "auth_required": false,
+          "response_schema": {
+            "200": {
+              "status": "string",
+              "app_name": "string",
+              "services": "object",
+              "artifacts": "object"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Statistical Drift Detection",
+      "description": "Runs Kolmogorov-Smirnov statistical test comparing historical baseline vs production data to detect distribution shifts",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/drift/status",
+          "description": "Execute KS-test drift analysis across monitored credit risk features",
+          "auth_required": false,
+          "query_params": {
+            "alpha": {
+              "type": "float",
+              "default": 0.05,
+              "description": "Significance level for KS test"
+            }
+          },
+          "response_schema": {
+            "200": {
+              "drift_detected": "boolean",
+              "alpha": "float",
+              "drifted_features": "string[]",
+              "metrics": "array"
+            },
+            "400": "Missing baseline or production data files",
+            "500": "Internal drift computation error"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Automated Model Retraining",
+      "description": "Triggers the ML training pipeline to retrain and serialize a new model version",
+      "endpoints": [
+        {
+          "method": "POST",
+          "path": "/train",
+          "description": "Trigger automated retraining pipeline",
+          "auth_required": false,
+          "request_schema": {
+            "body": {
+              "model_type": {
+                "type": "string",
+                "enum": ["rf", "xgb"],
+                "default": "rf"
+              },
+              "data_source": {
+                "type": "string",
+                "description": "Path to CSV dataset"
+              }
+            }
+          },
+          "response_schema": {
+            "200": {
+              "status": "string",
+              "message": "string",
+              "model_path": "string",
+              "model_type": "string"
+            },
+            "400": "Data source file not found",
+            "500": "Pipeline retraining execution error"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Credit Risk Prediction",
+      "description": "Predict default probability and risk assessment for a loan applicant",
+      "endpoints": [
+        {
+          "method": "POST",
+          "path": "/predict",
+          "description": "Score an applicant and return default probability and risk classification",
+          "auth_required": false,
+          "request_schema": {
+            "body": {
+              "AMT_INCOME_TOTAL": "float",
+              "AMT_CREDIT": "float",
+              "AMT_ANNUITY": "float",
+              "CNT_CHILDREN": "integer",
+              "DAYS_BIRTH": "integer",
+              "DAYS_EMPLOYED": "integer",
+              "CODE_GENDER": "string",
+              "FLAG_OWN_CAR": "string",
+              "FLAG_OWN_REALTY": "string",
+              "NAME_INCOME_TYPE": "string",
+              "NAME_EDUCATION_TYPE": "string",
+              "NAME_FAMILY_STATUS": "string",
+              "NAME_HOUSING_TYPE": "string"
+            }
+          },
+          "response_schema": {
+            "200": {
+              "default_prediction": "integer",
+              "default_probability": "float",
+              "risk_assessment": "string",
+              "approved": "boolean"
+            },
+            "404": "No trained model found",
+            "500": "Scoring engine execution error"
+          }
+        }
+      ]
+    }
+  ],
+  "acceptance_criteria": [
+    "GET / returns healthy status with correct service and artifact metadata",
+    "GET /drift/status correctly detects drift when production data has injected shifts",
+    "POST /train successfully trains and serializes a model",
+    "POST /predict returns valid risk scores when a trained model exists",
+    "All error cases return appropriate HTTP status codes"
+  ]
+}

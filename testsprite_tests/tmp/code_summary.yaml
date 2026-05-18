@@ -1,0 +1,99 @@
+version: "2"
+type: backend
+tech_stack:
+  - python
+  - fastapi
+  - scikit-learn
+  - xgboost
+  - scipy
+  - pandas
+  - joblib
+features:
+  - name: Health Check & Service Status
+    description: Returns API health status, model availability, and data artifact presence
+    files:
+      - src/app.py
+    endpoints:
+      - method: GET
+        path: /
+        description: Retrieve API status, registered services, and model/data artifact availability
+        auth_required: false
+        response_schema:
+          "200": "{status, app_name, services, artifacts}"
+    depends_on: []
+
+  - name: Statistical Drift Detection
+    description: Runs Kolmogorov-Smirnov statistical test comparing historical baseline vs production data to detect distribution shifts
+    files:
+      - src/app.py
+      - src/drift_detector.py
+    endpoints:
+      - method: GET
+        path: /drift/status
+        description: Execute KS-test drift analysis across monitored credit risk features
+        auth_required: false
+        response_schema:
+          "200": "{drift_detected, alpha, drifted_features, metrics[]}"
+          "400": "Missing baseline or production data files"
+          "500": "Internal drift computation error"
+    depends_on: []
+
+  - name: Automated Model Retraining (Self-Healing)
+    description: Triggers the ML training pipeline to retrain and serialize a new model version
+    files:
+      - src/app.py
+      - src/train_pipeline.py
+    endpoints:
+      - method: POST
+        path: /train
+        description: Trigger automated retraining pipeline with specified model type and data source
+        auth_required: false
+        request_schema:
+          body:
+            model_type: string
+            data_source: string
+        response_schema:
+          "200": "{status, message, model_path, model_type}"
+          "400": "Data source file not found"
+          "500": "Pipeline retraining execution error"
+    depends_on: []
+
+  - name: Credit Risk Prediction
+    description: Predict default probability and risk assessment for a loan applicant using the trained ML pipeline
+    files:
+      - src/app.py
+      - src/train_pipeline.py
+    endpoints:
+      - method: POST
+        path: /predict
+        description: Score an applicant and return default probability and risk classification
+        auth_required: false
+        request_schema:
+          body:
+            AMT_INCOME_TOTAL: number
+            AMT_CREDIT: number
+            AMT_ANNUITY: number
+            CNT_CHILDREN: integer
+            DAYS_BIRTH: integer
+            DAYS_EMPLOYED: integer
+            CODE_GENDER: string
+            FLAG_OWN_CAR: string
+            FLAG_OWN_REALTY: string
+            NAME_INCOME_TYPE: string
+            NAME_EDUCATION_TYPE: string
+            NAME_FAMILY_STATUS: string
+            NAME_HOUSING_TYPE: string
+        response_schema:
+          "200": "{default_prediction, default_probability, risk_assessment, approved}"
+          "404": "No trained model found"
+          "500": "Scoring engine execution error"
+    depends_on:
+      - Automated Model Retraining (Self-Healing)
+
+known_limitations:
+  - issue: No authentication or authorization on any endpoint
+    location: src/app.py
+    impact: All endpoints are publicly accessible
+  - issue: Retraining is synchronous and blocks the API thread
+    location: src/app.py
+    impact: Long-running training requests will timeout on slow hardware

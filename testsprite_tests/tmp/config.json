@@ -1,0 +1,17 @@
+{
+  "status": "init",
+  "scope": "codebase",
+  "type": "backend",
+  "localEndpoint": "http://localhost:8000/",
+  "serverPort": 58279,
+  "executionArgs": {
+    "projectName": "self-healing-ml-pipeline",
+    "projectPath": "d:\\data\\self-healing-ml-pipeline",
+    "testIds": [],
+    "additionalInstruction": "",
+    "serverMode": "development",
+    "envs": {
+      "API_KEY": "sk-user-y_LfQFPRCYwR7K26FY6UrlUSH9CYdMDoUhKl0HfbgIsA1IwJWCHqdznsjfTUArS8bteEh6aPql3mjpsIypeVXr-xCBaAAeJzIvCTq2V06XhUBQaE4L9ClS2cpvLW-q6ZFtI"
+    }
+  }
+}
