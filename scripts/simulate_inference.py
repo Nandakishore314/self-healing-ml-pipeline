@@ -18,14 +18,14 @@ import os
 import sys
 import time
 
-import pandas as pd
-
 # Ensure the project root is on sys.path so `src` imports work
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
-from src.drift_detector import DriftDetector
+import pandas as pd  # noqa: E402
+
+from src.drift_detector import DriftDetector  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # Logging

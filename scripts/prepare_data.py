@@ -130,7 +130,7 @@ current_path = os.path.join(DATA_DIR, "current_data.csv")
 historical_df.to_csv(historical_path, index=False)
 current_df.to_csv(current_path, index=False)
 
-print(f"\nOutput files written:")
+print("\nOutput files written:")
 print(f"  historical_data.csv : {len(historical_df)} rows -> {historical_path}")
 print(f"  current_data.csv    : {len(current_df)} rows -> {current_path}")
 
