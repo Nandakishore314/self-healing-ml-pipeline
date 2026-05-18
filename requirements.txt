@@ -3,5 +3,6 @@ scikit-learn
 xgboost
 joblib
 gdown
+scipy
 pytest
 ruff

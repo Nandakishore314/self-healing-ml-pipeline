@@ -5,3 +5,4 @@ data/raw/
 downloaded_dataset.csv
 *.csv
 *.joblib
+.vscode/
