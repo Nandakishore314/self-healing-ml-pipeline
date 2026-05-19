@@ -30,7 +30,7 @@ def test_post_predict_credit_risk_scoring():
         "data_source": "data/historical_data.csv"
     }
 
-    model_trained = False
+
     try:
         train_response = requests.post(train_url, json=train_payload, timeout=TIMEOUT)
         assert train_response.status_code == 200, f"Training failed with status code {train_response.status_code}"
@@ -38,7 +38,6 @@ def test_post_predict_credit_risk_scoring():
         assert "status" in train_json and isinstance(train_json["status"], str)
         assert "model_path" in train_json and isinstance(train_json["model_path"], str)
         assert "model_type" in train_json and isinstance(train_json["model_type"], str)
-        model_trained = True
 
         # With trained model, test the predict endpoint success case
         predict_response = requests.post(predict_url, json=applicant_features, timeout=TIMEOUT)
