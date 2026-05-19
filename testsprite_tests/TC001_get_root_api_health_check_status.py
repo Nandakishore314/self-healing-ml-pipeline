@@ -1,5 +1,6 @@
 import requests
 
+
 def test_get_root_api_health_check_status():
     base_url = "http://localhost:8000/"
     timeout = 30
@@ -28,7 +29,12 @@ def test_get_root_api_health_check_status():
 
     # Validate expected app name and status value
     expected_app_name = "Self-Healing ML Pipeline"
-    assert data["app_name"] == expected_app_name, f"app_name expected '{expected_app_name}', got '{data['app_name']}'"
-    assert data["status"].lower() == "healthy" or data["status"].lower() == "ok", "status should indicate healthy or ok"
+    assert data["app_name"] == expected_app_name, (
+        f"app_name expected '{expected_app_name}', got '{data['app_name']}'"
+    )
+    assert data["status"].lower() == "healthy" or data["status"].lower() == "ok", (
+        "status should indicate healthy or ok"
+    )
+
 
 test_get_root_api_health_check_status()

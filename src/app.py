@@ -63,7 +63,9 @@ os.makedirs(MODEL_DIR, exist_ok=True)
 # ---------------------------------------------------------------------------
 class RetrainRequest(BaseModel):
     model_type: str = Field("rf", description="Model architecture type: 'rf' or 'xgb'")
-    data_source: str = Field(HISTORICAL_PATH, description="Path or URL to dataset to train on")
+    data_source: str = Field(
+        HISTORICAL_PATH, description="Path or URL to dataset to train on"
+    )
 
 
 class PredictionRequest(BaseModel):
@@ -78,7 +80,9 @@ class PredictionRequest(BaseModel):
     FLAG_OWN_CAR: str = Field("N", examples=["N"])
     FLAG_OWN_REALTY: str = Field("Y", examples=["Y"])
     NAME_INCOME_TYPE: str = Field("Working", examples=["Working"])
-    NAME_EDUCATION_TYPE: str = Field("Secondary / special education", examples=["Secondary / special education"])
+    NAME_EDUCATION_TYPE: str = Field(
+        "Secondary / special education", examples=["Secondary / special education"]
+    )
     NAME_FAMILY_STATUS: str = Field("Married", examples=["Married"])
     NAME_HOUSING_TYPE: str = Field("House / apartment", examples=["House / apartment"])
 
@@ -99,13 +103,15 @@ def read_root():
         "services": {
             "drift_detector": "active",
             "model_trainer": "active",
-            "predictor": "active" if model_loaded else "inactive (no trained model found)"
+            "predictor": "active"
+            if model_loaded
+            else "inactive (no trained model found)",
         },
         "artifacts": {
             "model_present": model_loaded,
             "historical_baseline_present": historical_exists,
             "current_inference_present": current_exists,
-        }
+        },
     }
 
 
@@ -124,7 +130,11 @@ def get_drift_status(alpha: float = 0.05):
 
         # Monitor specific key credit application metrics
         features_to_monitor = ["AMT_INCOME_TOTAL", "AMT_CREDIT", "AMT_ANNUITY"]
-        features_in_both = [f for f in features_to_monitor if f in baseline_df.columns and f in current_df.columns]
+        features_in_both = [
+            f
+            for f in features_to_monitor
+            if f in baseline_df.columns and f in current_df.columns
+        ]
 
         if not features_in_both:
             raise HTTPException(
@@ -137,23 +147,27 @@ def get_drift_status(alpha: float = 0.05):
 
         results = []
         for res in report.feature_results:
-            results.append({
-                "feature": res.feature,
-                "ks_statistic": float(res.ks_statistic),
-                "p_value": float(res.p_value),
-                "drift_detected": bool(res.drift_detected)
-            })
+            results.append(
+                {
+                    "feature": res.feature,
+                    "ks_statistic": float(res.ks_statistic),
+                    "p_value": float(res.p_value),
+                    "drift_detected": bool(res.drift_detected),
+                }
+            )
 
         return {
             "drift_detected": bool(report.drift_detected),
             "alpha": float(report.alpha),
             "drifted_features": report.drifted_features,
-            "metrics": results
+            "metrics": results,
         }
 
     except Exception as e:
         logger.error(f"Failed to calculate drift status: {e}")
-        raise HTTPException(status_code=500, detail=f"Internal metrics extraction failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Internal metrics extraction failed: {str(e)}"
+        )
 
 
 @app.post("/train")
@@ -162,7 +176,7 @@ def trigger_retraining(req: RetrainRequest):
     if not os.path.exists(req.data_source):
         raise HTTPException(
             status_code=400,
-            detail=f"Requested data source does not exist: {req.data_source}"
+            detail=f"Requested data source does not exist: {req.data_source}",
         )
 
     try:
@@ -177,11 +191,13 @@ def trigger_retraining(req: RetrainRequest):
             "status": "success",
             "message": "Automated pipeline finished successfully. New model serialised.",
             "model_path": MODEL_PATH,
-            "model_type": req.model_type
+            "model_type": req.model_type,
         }
     except Exception as e:
         logger.error(f"Retraining failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Pipeline retraining execution error: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Pipeline retraining execution error: {str(e)}"
+        )
 
 
 @app.post("/predict")
@@ -190,13 +206,13 @@ def predict_risk(req: PredictionRequest):
     if not os.path.exists(MODEL_PATH):
         raise HTTPException(
             status_code=404,
-            detail="Trained model model registry file not found. Call /train first to serialize a pipeline model."
+            detail="Trained model model registry file not found. Call /train first to serialize a pipeline model.",
         )
 
     try:
         # Load the serialized scikit-learn/XGBoost Pipeline
         pipeline = joblib.load(MODEL_PATH)
-        
+
         # Turn JSON request body into a pandas single-row DataFrame
         applicant_data = pd.DataFrame([req.model_dump()])
 
@@ -207,9 +223,13 @@ def predict_risk(req: PredictionRequest):
         return {
             "default_prediction": prediction,
             "default_probability": float(prob),
-            "risk_assessment": "HIGH RISK" if prob > 0.3 else ("MODERATE RISK" if prob > 0.1 else "LOW RISK"),
-            "approved": bool(prob < 0.2)
+            "risk_assessment": "HIGH RISK"
+            if prob > 0.3
+            else ("MODERATE RISK" if prob > 0.1 else "LOW RISK"),
+            "approved": bool(prob < 0.2),
         }
     except Exception as e:
         logger.error(f"Prediction logic error: {e}")
-        raise HTTPException(status_code=500, detail=f"Scoring engine execution error: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Scoring engine execution error: {str(e)}"
+        )
