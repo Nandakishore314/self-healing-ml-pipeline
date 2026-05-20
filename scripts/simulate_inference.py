@@ -26,7 +26,7 @@ if PROJECT_ROOT not in sys.path:
 import pandas as pd  # noqa: E402
 
 from src.drift_detector import DriftDetector  # noqa: E402
-from src.train_pipeline import build_pipeline, train_and_save_model  # noqa: E402
+from src.train_pipeline import train_and_save_model  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -121,14 +121,16 @@ def simulate_inference(
             logger.info("Commencing automated retraining process due to data drift...")
             os.makedirs("models", exist_ok=True)
             new_model_path = f"models/model_v2_retrained_batch_{batch_idx + 1}.joblib"
-            
+
             train_and_save_model(
                 data_source=current_path,
                 target_column="TARGET",
                 model_path=new_model_path,
-                model_type="rf"
+                model_type="rf",
             )
-            logger.info(f"Automated retraining process completed successfully. New model saved to {new_model_path}")
+            logger.info(
+                f"Automated retraining process completed successfully. New model saved to {new_model_path}"
+            )
 
         # Small delay to simulate real-time processing
         time.sleep(0.3)
