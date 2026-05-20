@@ -26,6 +26,7 @@ if PROJECT_ROOT not in sys.path:
 import pandas as pd  # noqa: E402
 
 from src.drift_detector import DriftDetector  # noqa: E402
+from src.train_pipeline import build_pipeline, train_and_save_model  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -67,6 +68,7 @@ def simulate_inference(
     features: list[str],
     batch_size: int,
     alpha: float,
+    current_path: str,
 ) -> None:
     """Stream current_df in batches and run drift detection on each.
 
@@ -82,6 +84,8 @@ def simulate_inference(
         Number of rows per simulated inference batch.
     alpha : float
         Significance level for the KS test.
+    current_path : str
+        Path to the current dataset, used for retraining.
     """
     detector = DriftDetector(alpha=alpha)
     total_rows = len(current_df)
@@ -113,6 +117,18 @@ def simulate_inference(
                 f"\n>> ALERT: Drift detected in batch {batch_idx + 1}! "
                 f"Drifted features: {report.drifted_features}"
             )
+
+            logger.info("Commencing automated retraining process due to data drift...")
+            os.makedirs("models", exist_ok=True)
+            new_model_path = f"models/model_v2_retrained_batch_{batch_idx + 1}.joblib"
+            
+            train_and_save_model(
+                data_source=current_path,
+                target_column="TARGET",
+                model_path=new_model_path,
+                model_type="rf"
+            )
+            logger.info(f"Automated retraining process completed successfully. New model saved to {new_model_path}")
 
         # Small delay to simulate real-time processing
         time.sleep(0.3)
@@ -184,4 +200,5 @@ if __name__ == "__main__":
         features=args.features,
         batch_size=args.batch_size,
         alpha=args.alpha,
+        current_path=args.current,
     )
