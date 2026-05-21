@@ -49,7 +49,7 @@ def test_get_drift_status_success(mock_detector_class, mock_read_csv, mock_exist
     feature_mock.p_value = 0.8
     feature_mock.drift_detected = False
     mock_report.feature_results = [feature_mock]
-    
+
     mock_detector_class.return_value.run.return_value = mock_report
 
     response = client.get("/drift/status?alpha=0.05")
@@ -184,7 +184,7 @@ def test_chatbot_endpoint_with_memory(mock_gen_model, mock_joblib_load, mock_exi
     assert response_1.status_code == 200
     data_1 = response_1.json()
     assert "response" in data_1
-    
+
     # history_depth starts with context(2) + new turn(2) = 4
     history_depth_1 = len(data_1["history"])
 
@@ -197,6 +197,6 @@ def test_chatbot_endpoint_with_memory(mock_gen_model, mock_joblib_load, mock_exi
     assert response_2.status_code == 200
     data_2 = response_2.json()
     history_depth_2 = len(data_2["history"])
-    
+
     # Verify that history_depth increments properly across multiple session requests
     assert history_depth_2 > history_depth_1
