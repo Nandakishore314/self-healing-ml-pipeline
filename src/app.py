@@ -374,18 +374,24 @@ def predict_risk(req: PredictionRequest):
 
                 if response.parsed:
                     underwriter_report = {
-                        "underwriter_assessment": response.parsed.underwriter_assessment,
-                        "risk_mitigation_strategies": response.parsed.risk_mitigation_strategies,
+                        "underwriter_assessment": getattr(
+                            response.parsed, "underwriter_assessment", ""
+                        ),
+                        "risk_mitigation_strategies": getattr(
+                            response.parsed, "risk_mitigation_strategies", []
+                        ),
                     }
                 else:
                     import json
 
                     parsed_json = json.loads(response.text)
                     underwriter_report = {
-                        "underwriter_assessment": parsed_json["underwriter_assessment"],
-                        "risk_mitigation_strategies": parsed_json[
-                            "risk_mitigation_strategies"
-                        ],
+                        "underwriter_assessment": parsed_json.get(
+                            "underwriter_assessment", ""
+                        ),
+                        "risk_mitigation_strategies": parsed_json.get(
+                            "risk_mitigation_strategies", []
+                        ),
                     }
                 logger.info(
                     "Successfully fetched Gemini credit underwriting assessment."
