@@ -9,4 +9,5 @@ ruff
 fastapi
 uvicorn
 httpx
-httpx 
+google-genai
+python-dotenv
