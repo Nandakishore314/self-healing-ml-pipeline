@@ -13,6 +13,11 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 import joblib
+import google.generativeai as genai
+
+# Optional: configure genai if GEMINI_API_KEY is available
+if "GEMINI_API_KEY" in os.environ:
+    genai.configure(api_key=os.environ["GEMINI_API_KEY"])
 
 # Ensure project root is in sys.path
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -57,6 +62,12 @@ MODEL_PATH = os.path.join(MODEL_DIR, "pipeline_model.joblib")
 # Ensure directory for model exists
 os.makedirs(MODEL_DIR, exist_ok=True)
 
+# ---------------------------------------------------------------------------
+# In-Memory Registries
+# ---------------------------------------------------------------------------
+chat_sessions = {}  # {application_id: [{"role": "user", "parts": [...]}, ...]}
+application_registry = {}  # {application_id: {"applicant_data": {...}, "prediction": ...}}
+
 
 # ---------------------------------------------------------------------------
 # Pydantic Schemas
@@ -69,6 +80,7 @@ class RetrainRequest(BaseModel):
 
 
 class PredictionRequest(BaseModel):
+    application_id: str = Field("APP-000", examples=["APP-000"])
     # Standard applicant features for default prediction
     AMT_INCOME_TOTAL: float = Field(..., examples=[150000.0])
     AMT_CREDIT: float = Field(..., examples=[500000.0])
@@ -85,6 +97,11 @@ class PredictionRequest(BaseModel):
     )
     NAME_FAMILY_STATUS: str = Field("Married", examples=["Married"])
     NAME_HOUSING_TYPE: str = Field("House / apartment", examples=["House / apartment"])
+
+
+class ChatRequest(BaseModel):
+    application_id: str
+    message: str
 
 
 # ---------------------------------------------------------------------------
@@ -213,23 +230,92 @@ def predict_risk(req: PredictionRequest):
         # Load the serialized scikit-learn/XGBoost Pipeline
         pipeline = joblib.load(MODEL_PATH)
 
+        # Remove application_id from data for inference
+        req_data = req.model_dump()
+        app_id = req_data.pop("application_id", "APP-000")
+
         # Turn JSON request body into a pandas single-row DataFrame
-        applicant_data = pd.DataFrame([req.model_dump()])
+        applicant_data = pd.DataFrame([req_data])
 
         # Run scoring prediction
         prob = pipeline.predict_proba(applicant_data)[0][1]
         prediction = int(pipeline.predict(applicant_data)[0])
 
+        risk_assessment = (
+            "HIGH RISK"
+            if prob > 0.3
+            else ("MODERATE RISK" if prob > 0.1 else "LOW RISK")
+        )
+        approved = bool(prob < 0.2)
+
+        # Store in registry for chat context
+        application_registry[app_id] = {
+            "applicant_data": req_data,
+            "prediction": prediction,
+            "probability": float(prob),
+            "risk_assessment": risk_assessment,
+            "approved": approved,
+        }
+
         return {
             "default_prediction": prediction,
             "default_probability": float(prob),
-            "risk_assessment": "HIGH RISK"
-            if prob > 0.3
-            else ("MODERATE RISK" if prob > 0.1 else "LOW RISK"),
-            "approved": bool(prob < 0.2),
+            "risk_assessment": risk_assessment,
+            "approved": approved,
         }
     except Exception as e:
         logger.error(f"Prediction logic error: {e}")
         raise HTTPException(
             status_code=500, detail=f"Scoring engine execution error: {str(e)}"
+        )
+
+
+@app.post("/chat")
+def chat_with_decision(req: ChatRequest):
+    """Conversational endpoint to ask follow-up questions about an underwriting decision."""
+    app_id = req.application_id
+    if app_id not in application_registry:
+        raise HTTPException(
+            status_code=404,
+            detail="Application ID not found. Please score the application first.",
+        )
+
+    app_data = application_registry[app_id]
+
+    # Initialize history if not present
+    if app_id not in chat_sessions:
+        system_context = (
+            f"You are an AI underwriting assistant for LendShield AI. "
+            f"You are helping a loan officer understand the decision for application {app_id}.\n"
+            f"Applicant Data: {app_data['applicant_data']}\n"
+            f"Model Probability of Default: {app_data['probability']}\n"
+            f"Risk Assessment: {app_data['risk_assessment']}\n"
+            f"Approved: {app_data['approved']}"
+        )
+        chat_sessions[app_id] = [
+            {"role": "user", "parts": [system_context]},
+            {
+                "role": "model",
+                "parts": [
+                    "Understood. I am ready to answer questions about this underwriting decision."
+                ],
+            },
+        ]
+
+    history = chat_sessions[app_id]
+
+    try:
+        model = genai.GenerativeModel("gemini-1.5-flash")
+        chat = model.start_chat(history=history)
+        response = chat.send_message(req.message)
+
+        # Update session registry with new interactions
+        history.append({"role": "user", "parts": [req.message]})
+        history.append({"role": "model", "parts": [response.text]})
+
+        return {"response": response.text, "history": history}
+    except Exception as e:
+        logger.error(f"Chat execution error: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Conversational engine error: {str(e)}"
         )
