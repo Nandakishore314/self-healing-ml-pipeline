@@ -7,6 +7,6 @@ scipy
 pytest
 ruff
 fastapi
-uvicorn
-google-generativeai
 httpx
+google-generativeai
+uvicorn
