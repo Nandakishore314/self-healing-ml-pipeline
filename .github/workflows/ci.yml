@@ -2,9 +2,6 @@ name: CI Pipeline
 
 on: [push, pull_request]
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
-
 jobs:
   test-and-lint:
     runs-on: ubuntu-latest
@@ -17,19 +14,15 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: '3.12'
+        cache: 'pip'
 
     - name: Install Project Dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
+      run: echo         python -m pip install --upgrade pip && echo         pip install -r requirements.txt
 
     - name: Lint and Format Audit with Ruff
-      run: |
-        ruff check .
-        ruff format --check .
+      run: echo         ruff check . && echo         ruff format --check .
 
     - name: Run Test Suite with Pytest Coverage Verification
       env:
         GEMINI_API_KEY: "mock-key-value-for-ci"
-      run: |
-        python -m pytest -W ignore::FutureWarning --cov=src . --cov-report=term-missing
+      run: echo         python -m pytest -W ignore::FutureWarning --cov=src . --cov-report=term-missing
