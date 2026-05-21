@@ -98,6 +98,7 @@
           "auth_required": false,
           "request_schema": {
             "body": {
+              "application_id": "string",
               "AMT_INCOME_TOTAL": "float",
               "AMT_CREDIT": "float",
               "AMT_ANNUITY": "float",
@@ -125,6 +126,32 @@
           }
         }
       ]
+    },
+    {
+      "name": "Conversational Underwriting Assistant",
+      "description": "Allows loan officers to ask follow-up questions about a specific underwriting decision via a conversational interface",
+      "endpoints": [
+        {
+          "method": "POST",
+          "path": "/chat",
+          "description": "Engage with the LendShield AI assistant to query an application decision",
+          "auth_required": false,
+          "request_schema": {
+            "body": {
+              "application_id": "string",
+              "message": "string"
+            }
+          },
+          "response_schema": {
+            "200": {
+              "response": "string",
+              "history": "array"
+            },
+            "404": "Application ID not found",
+            "500": "Conversational engine error"
+          }
+        }
+      ]
     }
   ],
   "acceptance_criteria": [
@@ -132,6 +159,7 @@
     "GET /drift/status correctly detects drift when production data has injected shifts",
     "POST /train successfully trains and serializes a model",
     "POST /predict returns valid risk scores when a trained model exists",
+    "POST /chat correctly processes chat interactions maintaining history state for a known application ID",
     "All error cases return appropriate HTTP status codes"
   ]
 }
