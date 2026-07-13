@@ -5,6 +5,7 @@ joblib
 gdown
 scipy
 pytest
+pytest-cov
 ruff
 fastapi
 httpx

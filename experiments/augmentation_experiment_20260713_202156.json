@@ -1,0 +1,42 @@
+{
+  "timestamp": "20260713_202156",
+  "model_type": "rf",
+  "data_source": "C:\\Users\\nksva\\self-healing-ml-pipeline\\experiments\\_synthetic_data.csv",
+  "random_state": 42,
+  "augmentation_config": {
+    "method": "gaussian_noise",
+    "noise_sigma": 0.05,
+    "noise_fraction": 1.0,
+    "seed": 42
+  },
+  "baseline": {
+    "accuracy": 0.875,
+    "roc_auc": 0.6426857142857143,
+    "f1": 0.0,
+    "precision": 0.0,
+    "recall": 0.0,
+    "train_rows": 1600,
+    "val_rows": 400,
+    "model_type": "rf",
+    "augmented": false,
+    "augmentation_config": {}
+  },
+  "augmented": {
+    "accuracy": 0.875,
+    "roc_auc": 0.6169428571428571,
+    "f1": 0.0,
+    "precision": 0.0,
+    "recall": 0.0,
+    "train_rows": 3200,
+    "val_rows": 400,
+    "model_type": "rf",
+    "augmented": true,
+    "augmentation_config": {
+      "enabled": true,
+      "method": "gaussian_noise",
+      "seed": 42,
+      "noise_sigma": 0.05,
+      "noise_fraction": 1.0
+    }
+  }
+}
